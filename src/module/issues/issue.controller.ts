@@ -121,5 +121,6 @@ export const issueController = {
   createIssue,
   getAllIssue,
   getSingleIssue,
-  updateIssue
+  updateIssue,
+  deleteIssue
 };
