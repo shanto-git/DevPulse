@@ -20,14 +20,12 @@ const getAllIssueFromDB = async () => {
 
   const issues = result.rows;
 
-  const reporterId = [
-    ...new Set(issues.map((issue) => issue.reporter_id)),
-  ];
-  
+  const reporterId = [...new Set(issues.map((issue) => issue.reporter_id))];
+
   if (reporterId.length === 0) {
     return [];
   }
-  
+
   const getUser = await pool.query(
     `
             SELECT * FROM users WHERE id = any($1)
@@ -51,10 +49,44 @@ const getAllIssueFromDB = async () => {
     created_at: issue.created_at,
     updated_at: issue.updated_at,
   }));
-  return formattedIssues
+  return formattedIssues;
+};
+
+const singleIssueFromDB = async (id: string) => {
+  const result = await pool.query(
+    `
+      SELECT * FROM issues WHERE id = $1
+      `,
+    [id],
+  );
+  const issue = result.rows[0];
+
+  if (!issue) {
+    return null;
+  }
+
+  const userResult = await pool.query(
+    `
+      SELECT * FROM issues WHERE id = $1
+      `,
+    [issue.reporter_id],
+  );
+  const reporter = userResult.rows[0];
+
+  return {
+    id: issue.id,
+    title: issue.title,
+    description: issue.description,
+    type: issue.type,
+    status: issue.status,
+    reporter: reporter,
+    created_at: issue.created_at,
+    updated_at: issue.updated_at,
+  };
 };
 
 export const issueService = {
   createIssueIntoDB,
   getAllIssueFromDB,
+  singleIssueFromDB,
 };

@@ -41,7 +41,33 @@ const getAllIssue = async (req:Request, res:Response)=>{
     }
 }
 
+const getSingleIssue = async (req:Request,res:Response)=>{
+  const {id} = req.params
+  try {
+    const result = await issueService.singleIssueFromDB(id as string);
+
+    if (!result) {
+      res.status(404).json({
+        success: false,
+        message: "user not found",
+        data: {},
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Issue retrived successfully",
+      data: result,
+    });
+  } catch (error:any) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+      error: error,
+    });
+  }
+}
 export const issueController = {
   createIssue,
-  getAllIssue
+  getAllIssue,
+  getSingleIssue
 };
