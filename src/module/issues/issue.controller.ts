@@ -92,14 +92,7 @@ const updateIssue = async (req:Request, res:Response,)=>{
   }
 };
 
-const deleteIssue = async(req:Request,res:Response,)=>{
-  const {id} = req.params;
-  try {
-    const result = await issueService.deleteIssueFromDB(req.body, id as string)
-  } catch (error) {
-    
-  }
-}
+
 
 export const issueController = {
   createIssue,
