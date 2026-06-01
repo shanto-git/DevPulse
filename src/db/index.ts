@@ -2,7 +2,7 @@ import { Pool } from "pg";
 import config from "../config";
 
 export const pool = new Pool({
-  connectionString: config.connection_string,
+  connectionString: config.database_url,
 });
 
 export const initDB = async () => {
@@ -10,10 +10,10 @@ export const initDB = async () => {
     await pool.query(`
             CREATE TABLE IF NOT EXISTS users(
             id SERIAL PRIMARY KEY,
-            name VARCHAR,
+            name VARCHAR NOT NULL,
             email VARCHAR UNIQUE NOT NULL,
             password VARCHAR NOT NULL,
-            role VARCHAR DEFAULT 'contributor',
+            role VARCHAR DEFAULT 'contributor' CHECK (role IN ('contributor', 'maintainer')),
             
             created_at TIMESTAMP DEFAULT NOW(),
             updated_at TIMESTAMP DEFAULT NOW())
