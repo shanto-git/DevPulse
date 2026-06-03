@@ -13,8 +13,12 @@ const createIssueIntoDB = async (payload: IIssue) => {
   return result.rows[0];
 };
 
-const getAllIssueFromDB = async (queryParams: { sort?: string; type?: string; status?: string }) => {
-  const {sort, type, status} = queryParams;
+const getAllIssueFromDB = async (queryParams: {
+  sort?: string;
+  type?: string;
+  status?: string;
+}) => {
+  const { sort, type, status } = queryParams;
 
   let queryText = `SELECT * FROM issues WHERE 1=1`;
   const queryParamsArray: any[] = [];
@@ -102,9 +106,37 @@ const singleIssueFromDB = async (id: string) => {
   };
 };
 
-const updateIssueFromDB = async (payload: IIssue, id: string) => {
+const updateIssueFromDB = async (
+  payload: IIssue,
+  id: string,
+  user: { id: string; role: string },
+) => {
   console.log("Service started");
   const { title, description, type, status } = payload;
+
+  const currentIssue = await pool.query(
+    `
+    SELECT * FROM issues WHERE id = $1
+    `,
+    [id],
+  );
+
+  const issue = currentIssue.rows[0];
+
+  if (!issue) {
+    throw new Error("Issue not found");
+  }
+
+  if (user.role === "contributor") {
+    if (issue.reporter_id !== user.id) {
+      throw new Error("Forbidden: You can only update your own issues");
+    }
+
+    if (issue.status !== "open") {
+      throw new Error("Forbidden: Your update is in_progress");
+    }
+  }
+
   const result = await pool.query(
     `
     UPDATE issues SET title = COALESCE($1, title),
@@ -119,18 +151,21 @@ const updateIssueFromDB = async (payload: IIssue, id: string) => {
   return result.rows[0];
 };
 
-const deleteIssueFromDB = async (id:string, role:string)=>{
-  const result = await pool.query(`
+const deleteIssueFromDB = async (id: string, role: string) => {
+  const result = await pool.query(
+    `
     DELETE FROM issues WHERE id = $1
-    `,[id])
+    `,
+    [id],
+  );
 
-    return result.rows[0]
-}
+  return result.rows[0];
+};
 
 export const issueService = {
   createIssueIntoDB,
   getAllIssueFromDB,
   singleIssueFromDB,
   updateIssueFromDB,
-  deleteIssueFromDB
+  deleteIssueFromDB,
 };

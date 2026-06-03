@@ -263,9 +263,27 @@ var singleIssueFromDB = async (id) => {
     updated_at: issue.updated_at
   };
 };
-var updateIssueFromDB = async (payload, id) => {
+var updateIssueFromDB = async (payload, id, user) => {
   console.log("Service started");
   const { title, description, type, status } = payload;
+  const currentIssue = await pool.query(
+    `
+    SELECT * FROM issues WHERE id = $1
+    `,
+    [id]
+  );
+  const issue = currentIssue.rows[0];
+  if (!issue) {
+    throw new Error("Issue not found");
+  }
+  if (user.role === "contributor") {
+    if (issue.reporter_id !== user.id) {
+      throw new Error("Forbidden: You can only update your own issues");
+    }
+    if (issue.status !== "open") {
+      throw new Error("Forbidden: Your update is in_progress");
+    }
+  }
   const result = await pool.query(
     `
     UPDATE issues SET title = COALESCE($1, title),
@@ -279,9 +297,12 @@ var updateIssueFromDB = async (payload, id) => {
   return result.rows[0];
 };
 var deleteIssueFromDB = async (id, role) => {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     DELETE FROM issues WHERE id = $1
-    `, [id]);
+    `,
+    [id]
+  );
   return result.rows[0];
 };
 var issueService = {
@@ -335,16 +356,20 @@ var getSingleIssue = async (req, res) => {
     data: result
   });
 };
-var updateIssue = async (req, res) => {
+var updateIssue = catchAsync_default(async (req, res) => {
   const { id } = req.params;
-  const result = await issueService.updateIssueFromDB(req.body, id);
-  console.log("Query finished", result);
+  const user = req.user;
+  const result = await issueService.updateIssueFromDB(
+    req.body,
+    id,
+    user
+  );
   sendResponse_default(res, StatusCodes3.OK, {
     success: true,
     message: "Issue updated successfully",
     data: result
   });
-};
+});
 var deleteIssue = async (req, res) => {
   const { id } = req.params;
   const userRole = req.user.role;

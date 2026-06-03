@@ -3,6 +3,7 @@ import { issueService } from "./issue.service";
 import type { IIssue } from "./issue.interface";
 import { StatusCodes } from "http-status-codes";
 import sendResponse from "../../utils/sendResponse";
+import catchAsync from "../../utils/catchAsync";
 
 const createIssue = async (req: Request, res: Response) => {
   const reporter_id = (req as any).user.id;
@@ -49,16 +50,22 @@ const getSingleIssue = async (req: Request, res: Response) => {
   });
 };
 
-const updateIssue = async (req: Request, res: Response) => {
+const updateIssue = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const result = await issueService.updateIssueFromDB(req.body, id as string);
-  console.log("Query finished", result);
+  const user = req.user;
+  const result = await issueService.updateIssueFromDB(
+    req.body,
+    id as string,
+    user as any,
+  );
+  
+  // console.log("Query finished", result);
   sendResponse(res, StatusCodes.OK, {
     success: true,
     message: "Issue updated successfully",
     data: result,
   });
-};
+});
 
 const deleteIssue = async (req: Request, res: Response) => {
   const { id } = req.params;
