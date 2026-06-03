@@ -68,10 +68,10 @@ created_at = TIMESTAMP | DEFAULT NOW()
 
 issues Table Structure:
 id = SERIAL | PRIMARY KEY, UNIQUE
-title = VARCHAR(255) | NOT NULL
+title = VARCHAR(150) | NOT NULL
 description = TEXT | NOT NULL
-type = VARCHAR(50) | NOT NULL (Value must be 'bug' or 'feature')
-status = VARCHAR(50) | DEFAULT 'open' (Value must be 'open', 'in_progress', or 'closed')
+type = VARCHAR(20) | NOT NULL (Value must be 'bug' or 'feature')
+status = VARCHAR(20) | DEFAULT 'open' (Value must be 'open', 'in_progress', or 'closed')
 reporter_id = UUID / INT | FOREIGN KEY, REFERENCES users(id) ON DELETE CASCADE
 created_at = TIMESTAMP | DEFAULT NOW()
 updated_at = TIMESTAMP | DEFAULT NOW()
